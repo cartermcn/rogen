@@ -92,28 +92,21 @@ export function pruneObject(
 
 		const childTreePath = treePath ? `${treePath}.${key}` : key;
 		const childNode = val as RojoNode;
-
 		const childPath = getPathString(childNode);
-		if (childPath) {
-			if (hasPathPrefix(childPath, buildDir)) continue;
 
-			// Optional paths are allowed to be absent so only required (string) template
-			// paths are pruned when missing.
-			const isOptional = typeof childNode.$path === "object";
-			if (!isOptional) {
-				const absolutePath = path.resolve(outputDir, childPath);
-				if (!fs.existsSync(absolutePath)) {
-					delete node[key];
-					removed.push({
-						treePath: childTreePath,
-						rojoPath: childPath,
-					});
-					continue;
-				}
-			}
-		}
-		pruneObject(childNode, buildDir, outputDir, removed, childTreePath);
+		// Generated source paths are already managed by Rogen.
+		if (childPath && hasPathPrefix(childPath, buildDir)) continue;
+
+		// Preserve all explicitly configured project paths.
+		pruneObject(
+			childNode,
+			buildDir,
+			outputDir,
+			removed,
+			childTreePath
+		);
 	}
+
 	return node;
 }
 
